@@ -1,0 +1,7 @@
+#!/bin/sh
+
+cd `dirname $0`/..
+
+source bin/env.sh
+
+echo "Ready to rock."
