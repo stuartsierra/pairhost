@@ -1,0 +1,3 @@
+ec2-*-tools-*
+id_rsa*
+*.pem
