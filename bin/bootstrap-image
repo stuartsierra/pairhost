@@ -5,5 +5,5 @@ source bin/env.sh
 
 echo ""
 echo "Launching one instance..."
-ec2-run-instances -H ami-2d4aa444 -k $PRIVATE_KEY_NAME
+ec2-run-instances -H ami-2d4aa444 -k $PRIVATE_KEY_NAME -z us-east-1b
 echo ""
