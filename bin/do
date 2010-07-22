@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cd `dirname $0`/..
+source bin/env.sh
+
+echo ""
+echo "Running $@"
+$@
+echo ""

@@ -6,8 +6,8 @@
 
 EC2_API_DIR=`ls -d ec2-api-tools-*`
 EC2_AMI_DIR=`ls -d ec2-ami-tools-*`
-EC2_PRIVATE_KEY=`ls pk-*.pem`
-EC2_CERT=`ls cert-*.pem`
+export EC2_PRIVATE_KEY=`ls pk-*.pem`
+export EC2_CERT=`ls cert-*.pem`
 ID_RSA_PRIVATE_KEY=`ls id_rsa-*`
 PRIVATE_KEY_NAME=`echo $ID_RSA_PRIVATE_KEY | perl -pne 's/id_rsa-//go'`
 
