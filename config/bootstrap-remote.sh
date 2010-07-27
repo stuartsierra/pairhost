@@ -2,20 +2,33 @@
 
 #### Ubuntu lucid bootstrap script
 
-# source control
-/usr/bin/sudo /usr/bin/apt-get install -y git-core git-svn subversion subversion-tools
+# Add multiverse repositories (for EC2 tools)
+/usr/bin/sudo /usr/bin/perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
+
+# Add repository for Sun JDK
+/usr/bin/sudo /usr/bin/add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+
+# Update packages
+/usr/bin/sudo /usr/bin/apt-get update
 
 # Java
-/usr/bin/sudo /usr/bin/add-apt-repository "deb http://archive.canonical.com/ lucid partner"
-/usr/bin/sudo /usr/bin/apt-get update
 /usr/bin/sudo /usr/bin/apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
 ### USER: accept JDK license
 
+# Mail (to avoid installing exim later)
+/usr/bin/sudo /usr/bin/apt-get install -y postfix
+### USER: Configure mail host name to be "relevance-pairhost"
+
+# source control
+/usr/bin/sudo /usr/bin/apt-get install -y git-core git-svn subversion subversion-tools
+
 # Ruby
-/usr/bin/sudo /usr/bin/apt-get install -y ruby-full jruby rake rubygems
+/usr/bin/sudo /usr/bin/apt-get install -y ruby-full jruby rake
+### Install latest Rubygems
+### Install "bundler" gem
 
 # Databases
-/usr/bin/sudo /usr/bin/apt-get install -y mysql-server mysql-admin mysql-client postgresql postgresql-client
+/usr/bin/sudo /usr/bin/apt-get install -y mysql-server mysql-admin mysql-client postgresql postgresql-client libmysqlclient-dev
 ### USER: set empty password for MySQL root user
 
 # Editors
@@ -34,11 +47,11 @@
 # X Windows
 /usr/bin/sudo /usr/bin/apt-get install -y tightvncserver fluxbox firefox
 
+# Libraries
+/usr/bin/sudo /usr/bin/apt-get install -y libxml2 libxml2-dev libxslt libxslt-dev
+
 # Misc
 /usr/bin/sudo /usr/bin/apt-get install -y cron python imagemagick zsh perl tmux doxygen
 
-# EC2 AMI tools
-/usr/bin/sudo /usr/bin/apt-get install -y alien
-/usr/bin/wget https://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.noarch.rpm
-export RUBYLIB=/usr/lib/site_ruby:$RUBYLIB
-/usr/bin/sudo /usr/bin/alien -i ec2-ami-tools.noarch.rpm
+# EC2 tools
+/usr/bin/sudo /usr/bin/apt-get install -y ec2-ami-tools ec2-api-tools
