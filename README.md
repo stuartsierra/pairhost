@@ -46,7 +46,8 @@ Linux" from http://www.nomachine.com/
 Use the i386 DEB packages.  You need to install the client, node, and
 server packages, in that order.
 
-2. Enable password-based SSH login to the EC2 instance. Create a new
+2. Enable password-based SSH login to the EC2 instance. Put the line
+`PasswordAuthentication yes` in `/etc/ssh/sshd_config`. Create a new
 user account with a password if necessary.
 
 3. On the EC2 instance, start the NX server:
