@@ -5,5 +5,17 @@ source bin/env.sh
 
 echo ""
 echo "Launching one instance..."
-ec2-run-instances -H ami-2d4aa444 -k $PRIVATE_KEY_NAME -z us-east-1b
-echo ""
+INSTANCE_ID=`ec2-run-instances -H ami-714ba518 -k $PRIVATE_KEY_NAME -z us-east-1b | awk '/INSTANCE/ {print $2}'`
+echo "New instance ID is $INSTANCE_ID."
+
+echo "Waiting for new instance to start..."
+while true; do
+    if (ec2-describe-instances | grep $INSTANCE_ID | grep running); then
+	break
+    else
+	echo -n "."
+	sleep 5
+    fi
+done
+
+echo "New instance $INSTANCE_ID is running."
