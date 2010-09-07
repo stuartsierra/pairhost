@@ -1,0 +1,26 @@
+#!/bin/sh
+
+cd `dirname $0`/..
+source bin/env.sh
+
+if [ -z "$1" ]; then
+    echo "Usage: bin/start INSTANCE-ID"
+    exit 1
+fi
+
+INSTANCE_ID=$1
+
+echo "Starting instance $INSTANCE_ID..."
+ec2-start-instances $INSTANCE_ID
+
+echo "Waiting for instance to start..."
+while true; do
+    if (ec2-describe-instances | grep $INSTANCE_ID | grep running); then
+	break
+    else
+	echo -n "."
+	sleep 5
+    fi
+done
+
+echo "Instance $INSTANCE_ID is running."

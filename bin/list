@@ -5,4 +5,4 @@ source bin/env.sh
 
 echo "Running instances:"
 echo "ID         HOSTNAME"
-ec2-describe-instances | awk '/INSTANCE.*running/ {print $2, $4}'
+ec2-describe-instances | awk '/INSTANCE/ {print $2, $4}'
