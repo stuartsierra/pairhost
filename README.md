@@ -2,7 +2,45 @@ Pairhost: the ultimate EC2 remote pairing development workstation
 
 by Stuart Sierra, http://stuartsierra.com/
 
-Under development.
+
+Setup
+=====
+
+Run the script `bin/ready` to find out what pieces you're missing.
+
+You'll need five things copied into this directory:
+
+* The Amazon EC2 API tools, unzipped
+* The Amazon EC2 *AMI* tools, unzipped
+* The `cert-*.pem` file from your Amazon Web Services account
+* The `pk-*.pem` file from your Amazon Web Services account
+* The SSH private key file from your Amazon Web Services account, see below
+
+The SSH private key file must be named `id_rsa-*` where `*` is the *name* of your Amazon Web Services keypair.  So, for example, if your keypair is named `my_company_key` then the SSH private key file must be named `id_rsa-my_company_key`
+
+
+Finding and Starting Instances
+==============================
+
+Run `bin/list` to see a list of available instances.  It will look like this:
+
+    ID         HOSTNAME
+    i-1a2b3c4d stopped
+    i-a5b6c7d8 stopped
+
+"Stopped" instances are not currently running and are therefore available for you to use.
+
+To start an instance, run `bin/start ID` where `ID` is an instance ID like `i-1a2b3c4d`.  The instance will start and boot, which takes 10 to 30 seconds.
+
+When your instance is ready, the script will spit out a bunch of information, including the host name.  Running `bin/list` again will also show the instance's host name.
+
+You can SSH in as user `pair` at the host.
+
+
+Bootstrapping New Instances
+===========================
+
+Not automated or documented yet.  Sorry.
 
 
 SSH Tunneling
@@ -17,46 +55,14 @@ Where username and hostname are your login and the EC2 host name.
 Now local-port on your local machine is tunneled to remote-port on the EC2 instance.
 
 
-TightVNC: X-Windows in the Cloud
-================================
-
-1. Download the TightVNC Java client from http://www.tightvnc.com/download.php
-
-2. Unzip the client.
-
-3. On your local machine, tunnel port 5901:
-
-    ssh -f username$hostname -L 15901:hostname:5901 -N
-
-4. On the EC2 instance, start a VNC server:
-
-    vncserver
-
-5. On your local machine, run the TightVNC client like this:
-
-    java -jar TightVncViewer.jar HOST localhost PORT 15901 "Restricted Colors" "Yes"
-
-
 NX: Faster X-Windows in the Cloud
 =================================
 
-1. On the EC2 instance, download and install the "NX Free Edition for
-Linux" from http://www.nomachine.com/
+1. On the EC2 instance, start the NX server by running the alias `nx`
 
-Use the i386 DEB packages.  You need to install the client, node, and
-server packages, in that order.
+2. Download and install a (free) NX client for your operating system from http://nomachine.com/
 
-2. Enable password-based SSH login to the EC2 instance. Put the line
-`PasswordAuthentication yes` in `/etc/ssh/sshd_config`. Create a new
-user account with a password if necessary.
+3. From the client, initiate an NX session on the EC2 host.
 
-3. On the EC2 instance, start the NX server:
-
-    sudo /usr/NX/bin/nxserver --start
-
-4. Download and install the (free) NX client for your local operating system.
-
-5. From the client, initiate an NX session on the EC2 host.
-
-6. Your pair starts an NX "Shadow" session on the same host, as the
+4. Your pair starts an NX "Shadow" session on the same host, as the
 same user, and attaches to your session.
