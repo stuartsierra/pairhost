@@ -19,6 +19,7 @@ You'll need five things copied into this directory:
 The SSH private key file must be named `id_rsa-*` where `*` is the *name* of your Amazon Web Services keypair.  So, for example, if your keypair is named `my_company_key` then the SSH private key file must be named `id_rsa-my_company_key`
 
 
+
 Finding and Starting Instances
 ==============================
 
@@ -32,21 +33,26 @@ Run `bin/list` to see a list of available instances.  It will look like this:
 
 To start an instance, run `bin/start ID` where `ID` is an instance ID like `i-1a2b3c4d`.  The instance will start and boot, which takes 10 to 30 seconds.
 
-When your instance is ready, the script will spit out a bunch of information, including the host name.  Running `bin/list` again will also show the instance's host name.
+When your instance is ready, the script will spit out a bunch of information, including the host name.
 
-You can SSH in as user `pair` at the host.
+Running `bin/list` again will also show the instance's host name.
 
 
-Bootstrapping New Instances
-===========================
 
-Not automated or documented yet.  Sorry.
+Logging in and Joining a Terminal Session
+=========================================
+
+You can SSH in as user `pair` @ the host name.
+
+If you are the first user, run `tmux` to start a new shared terminal session.
+If you are the second user, run `tmux attach` to join the tmux session.
+
 
 
 Opening and Closing Firewall Ports
 ========================================
 
-EC2 does not use standard Linux firewalls.  Instead, the firewall must be configured through the Amazon API.  The script `bin/firewall` makes this easier.
+EC2 does not use standard Linux firewalls.  Instead, the firewall must be configured through the Amazon API.  The script `bin/firewall` makes this easier.  You run this script on your local machine, not the EC2 host.
 
 Run `bin/firewall show` to see the list of currently open ports.
 
@@ -55,16 +61,18 @@ Run `bin/firewall open <port>` to open a port.
 Run `bin/firewall close <port>` to close it again.
 
 
+
 SSH Tunneling
 =============
 
 Don't open ports on the remote machine, use tunnels!  Run this on your local machine:
 
-    ssh -f username@hostname -L local-port:hostname:remote-port -N
+    ssh -f pair@hostname -L local-port:hostname:remote-port -N
 
-Where username and hostname are your login and the EC2 host name.
+Where "hostname" is the EC2 host name.
 
 Now local-port on your local machine is tunneled to remote-port on the EC2 instance.
+
 
 
 NX: Faster X-Windows in the Cloud
@@ -76,5 +84,11 @@ NX: Faster X-Windows in the Cloud
 
 3. From the client, initiate an NX session on the EC2 host.
 
-4. Your pair starts an NX "Shadow" session on the same host, as the
-same user, and attaches to your session.
+4. Your pair starts an NX "Shadow" session on the same host, as the same user, and "attaches" to your session.
+
+
+
+Bootstrapping New Instances
+===========================
+
+Not automated or documented yet.  Sorry.
