@@ -10,6 +10,7 @@ export EC2_PRIVATE_KEY=`ls pk-*.pem`
 export EC2_CERT=`ls cert-*.pem`
 ID_RSA_PRIVATE_KEY=`ls id_rsa-*`
 PRIVATE_KEY_NAME=`echo $ID_RSA_PRIVATE_KEY | perl -pne 's/id_rsa-//go'`
+GROUP_NAME="default"
 
 ERROR=0
 

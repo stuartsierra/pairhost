@@ -43,6 +43,18 @@ Bootstrapping New Instances
 Not automated or documented yet.  Sorry.
 
 
+Opening and Closing Firewall Ports
+========================================
+
+EC2 does not use standard Linux firewalls.  Instead, the firewall must be configured through the Amazon API.  The script `bin/firewall` makes this easier.
+
+Run `bin/firewall show` to see the list of currently open ports.
+
+Run `bin/firewall open <port>` to open a port.
+
+Run `bin/firewall close <port>` to close it again.
+
+
 SSH Tunneling
 =============
 

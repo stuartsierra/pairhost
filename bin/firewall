@@ -1,0 +1,29 @@
+#!/bin/sh
+
+cd `dirname $0`/..
+source bin/env.sh
+
+if [ -z "$1" ]; then
+    echo "Usage: bin/firewall open <port>"
+    echo "       bin/firewall close <port>"
+    echo "       bin/firewall show"
+    exit 1
+fi
+
+COMMAND=$1
+PORT=$2
+
+case $COMMAND in
+open)
+	ec2-authorize $GROUP_NAME -P tcp -p $PORT
+	;;
+close)
+	ec2-revoke $GROUP_NAME -P tcp -p $PORT
+	;;
+show)
+	ec2-describe-group $GROUP_NAME
+	;;
+*)
+	echo "Bad command; run without args for usage"
+	exit 1
+esac
