@@ -67,9 +67,9 @@ SSH Tunneling
 
 Don't open ports on the remote machine, use tunnels!  Run this on your local machine:
 
-    ssh -f pair@hostname -L local-port:hostname:remote-port -N
+    bin/tunnel <username> <hostname> <local-port> <remote-port>
 
-Where "hostname" is the EC2 host name.
+Where `<username>` is "pair" and `<hostname>` is the EC2 host name.
 
 Now local-port on your local machine is tunneled to remote-port on the EC2 instance.
 
