@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then
+    echo "Usage: bin/tunnel <username> <hostname> <local-port> <remote-port>"
+    echo "Creates a secure tunnel from localhost:local-port to remote-port on hostname"
+    exit 1
+fi
+
+USER=$1
+HOST=$2
+LOCALPORT=$3
+REMOTEPORT=$4
+
+exec ssh -f $USER@$HOST -L $LOCALPORT:$HOST:$REMOTEPORT -N
