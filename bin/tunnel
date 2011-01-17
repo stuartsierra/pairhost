@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -z "$1" ]; then
     echo "Usage: bin/tunnel <username> <hostname> <local-port> <remote-port>"
