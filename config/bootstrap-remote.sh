@@ -13,23 +13,26 @@
 
 # Java
 /usr/bin/sudo /usr/bin/apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
-### USER: accept JDK license
+### USER interaction: accept JDK license
 
 # Mail (to avoid installing exim later)
 /usr/bin/sudo /usr/bin/apt-get install -y postfix
-### USER: Configure mail host name to be "relevance-pairhost"
+### USER interaction: Set mail host name
 
 # source control
 /usr/bin/sudo /usr/bin/apt-get install -y git-core git-svn subversion subversion-tools
 
+# Necessary libs for RVM and Ruby
+/usr/bin/sudo /usr/bin/apt-get install -y build-essential bison openssl libreadline6 libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 libxml2-dev libxslt-dev autoconf libc6-dev
 # Ruby
 /usr/bin/sudo /usr/bin/apt-get install -y ruby-full jruby rake
-### Install latest Rubygems
-### Install "bundler" gem
+### USER TODO: Install latest Rubygems
+### USER TODO: Install "bundler" gem
+### USER TODO: Install RVM
 
 # Databases
 /usr/bin/sudo /usr/bin/apt-get install -y mysql-server mysql-admin mysql-client postgresql postgresql-client libmysqlclient-dev
-### USER: set empty password for MySQL root user
+### USER interaction: set empty password for MySQL root user (twice)
 
 # Editors
 /usr/bin/sudo /usr/bin/apt-get install -y vim emacs nano
@@ -55,3 +58,5 @@
 
 # EC2 tools
 /usr/bin/sudo /usr/bin/apt-get install -y ec2-ami-tools ec2-api-tools
+
+### USER TODO: Install truecrypt, http://www.truecrypt.org/
