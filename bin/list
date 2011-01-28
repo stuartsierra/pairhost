@@ -3,5 +3,5 @@
 cd `dirname $0`/..
 source bin/env.sh
 
-echo "ID          SIZE	HOSTNAME"
-ec2-describe-instances | awk '-F\t' '/INSTANCE/ {print $2, $4, $10}'
+echo "ID         SIZE     HOSTNAME"
+ec2-describe-instances | awk '-F\t' '/INSTANCE/ {print $2, $10, $4}'
