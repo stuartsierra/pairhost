@@ -47,8 +47,11 @@
 # C# development:
 /usr/bin/sudo /usr/bin/apt-get install -y mono-devel
 
-# X Windows
-/usr/bin/sudo /usr/bin/apt-get install -y tightvncserver fluxbox firefox
+# Desktop programs, including X, GNOME, Firefox, and OpenOffice
+/usr/bin/sudo /usr/bin/apt-get install -y ubuntu-desktop
+
+# VNC server
+/usr/bin/sudo /usr/bin/apt-get install -y tightvncserver
 
 # Libraries
 /usr/bin/sudo /usr/bin/apt-get install -y libxml2 libxml2-dev libxslt libxslt-dev
