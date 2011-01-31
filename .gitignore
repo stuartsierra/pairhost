@@ -1,3 +1,5 @@
 ec2-*-tools-*
 id_rsa*
 *.pem
+aws-secret.sh
+
