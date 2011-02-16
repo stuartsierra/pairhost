@@ -62,4 +62,9 @@
 # EC2 tools
 /usr/bin/sudo /usr/bin/apt-get install -y ec2-ami-tools ec2-api-tools
 
+# Automatic shutdown 15 minutes after midnight, system time
+/usr/bin/sudo /usr/bin/crontab -u root - <<EOF
+ 15 1  *   *   *     /sbin/shutdown -h 0
+EOF
+
 ### USER TODO: Install truecrypt, http://www.truecrypt.org/
