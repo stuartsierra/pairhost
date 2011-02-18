@@ -63,8 +63,21 @@
 /usr/bin/sudo /usr/bin/apt-get install -y ec2-ami-tools ec2-api-tools
 
 # Automatic shutdown 15 minutes after midnight, system time
+/bin/cat <<EOF > /tmp/auto_shutdown_warning_message
+
+    NOTICE!  This machine will shutdown automatically in 15 minutes.
+
+    To prevent this, delete the file /var/auto_shutdown
+
+EOF
+
+/usr/bin/sudo /bin/mv /tmp/auto_shutdown_warning_message /etc/
+
 /usr/bin/sudo /usr/bin/crontab -u root - <<EOF
- 15 1  *   *   *     /sbin/shutdown -h 0
+# min hr day mon week  command
+  0   1  *   *   *     /usr/bin/touch /var/auto_shutdown
+  1   1  *   *   *     /usr/bin/wall /etc/auto_shutdown_warning_message
+ 16   1  *   *   *     /bin/sh -c 'if [ -e /var/auto_shutdown ]; then /sbin/shutdown -h 0; fi'
 EOF
 
 ### USER TODO: Install truecrypt, http://www.truecrypt.org/
