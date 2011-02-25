@@ -18,4 +18,4 @@ USERNAME=$1
 HOSTNAME=$2
 
 scp config/bootstrap-remote.sh $USERNAME@$HOSTNAME:/tmp
-ssh $USERNAME@$HOSTNAME /usr/bin/env bash /tmp/bootstrap-remote.sh
+ssh -t $USERNAME@$HOSTNAME /usr/bin/env bash /tmp/bootstrap-remote.sh
