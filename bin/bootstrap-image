@@ -3,9 +3,37 @@
 cd `dirname $0`/..
 source bin/env.sh
 
+function exit_with_usage {
+    echo <<EOF
+Usage: $0 <size>
+
+Where <size> is one of:
+
+    m1.small    32-bit, 1-core, 1.7GB RAM
+    m1.large    64-bit, 2-core, 7.5GB RAM
+
+EOF
+    exit 1
+}
+
+if [ -z "$1" ]; then
+    exit_with_usage
+}
+
+INSTANCE_TYPE="$1"
+
+if ( echo $INSTANCE_TYPE | grep -q large ); then
+    AMI=$AMI_64BIT
+    echo "Using 64-bit AMI $AMI"
+else
+    AMI=$AMI_32BIT
+    echo "Using 32-bit AMI $AMI"
+fi
+
+
 echo ""
 echo "Launching one instance..."
-INSTANCE_ID=`ec2-run-instances -H ami-714ba518 -k $PRIVATE_KEY_NAME -z us-east-1b | awk '/INSTANCE/ {print $2}'`
+INSTANCE_ID=`ec2-run-instances -t $INSTANCE_TYPE -H $AMI -k $PRIVATE_KEY_NAME -z us-east-1b | awk '/INSTANCE/ {print $2}'`
 echo "New instance ID is $INSTANCE_ID."
 
 echo "Waiting for new instance to start..."
