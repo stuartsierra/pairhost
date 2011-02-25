@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+cd `dirname $0`/..
+source bin/env.sh
+
+function exit_with_usage {
+    cat <<EOF
+Usage: $0 <hostname> <login_username> <target_username> <public_key>
+
+Where <login_username> is the username you can log in to with your
+Amazon Web Services account key.
+EOF
+    exit 1
+}
+
+if [ -z "$4" ]; then
+    exit_with_usage
+fi
+
+HOSTNAME="$1"
+LOGIN_USERNAME="$2"
+TARGET_USERNAME="$3"
+
+shift 3
+PUBLIC_KEY="$@"
+
+ssh -i $ID_RSA_PRIVATE_KEY $LOGIN_USERNAME@$HOSTNAME \
+    "/usr/bin/sudo /bin/sh -c 'echo $PUBLIC_KEY >> ~$TARGET_USERNAME/.ssh/authorized_keys'"

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+cd `dirname $0`/..
+source bin/env.sh
+
+function exit_with_usage {
+    cat <<EOF
+Usage: $0 <username> <hostname>
+EOF
+    exit 1
+}
+
+if [ -z "$2" ]; then
+    exit_with_usage
+fi
+
+USERNAME=$1
+HOSTNAME=$2
+
+scp config/bootstrap-remote.sh $USERNAME@$HOSTNAME:/tmp
+ssh $USERNAME@$HOSTNAME /usr/bin/env bash /tmp/bootstrap-remote.sh
