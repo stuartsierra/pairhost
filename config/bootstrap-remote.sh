@@ -10,14 +10,16 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 if ( id pair &> /dev/null ); then
     echo "User 'pair' already exists."
 else
-    sudo useradd pair -G adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
+    sudo useradd pair -m -s /bin/bash \
+        -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
     sudo -u pair mkdir ~pair/src ~pair/open ~pair/distfiles
+    sudo -i -u pair ssh-keygen -q
 fi
 
 if ( id nxuser &> /dev/null ); then
     echo "User 'nxuser' already exists."
 else
-    sudo useradd nxuser
+    sudo useradd nxuser -m -s /bin/bash
 fi
 
 # Add multiverse repositories (for EC2 tools)
@@ -108,20 +110,36 @@ if [ ! -e /usr/bin/gem ]; then
 fi
 
 # Popular system-wide gems
-sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
+if ( gem list --local | grep -q bundler ); then
+    echo "Gems already installed"
+else
+    sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
+fi
 
 # RVM
 if [ ! -e ~pair/.rvm ]; then
     (
         cd /tmp
         wget http://rvm.beginrescueend.com/releases/rvm-install-head
-        sudo -i -u pair bash rvm-install-head
-        echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"' >> ~pair/.bashrc
+        sudo -i -u pair bash /tmp/rvm-install-head
     )
 fi
 
+# Bash aliases
+if ( grep truecrypt -s ~pair/.bashrc ); then
+    echo "Shell aliases already installed"
+else
+    cat <<EOF >> /tmp/new_bash_aliases
+[[ -s "\$HOME/.rvm/scripts/rvm" ]] && . "\$HOME/.rvm/scripts/rvm"
+alias nx="sudo /usr/NX/bin/nxserver --start"
+alias sourcecode="truecrypt -t -k '' --protect-hidden=no \$HOME/sourcecode.tc \$HOME/src"
+EOF
+    sudo sh -c 'cat /tmp/new_bash_aliases >> ~pair/.bashrc'
+fi
+
+
 # Login message
-cat <<EOF /tmp/motd
+cat <<EOF > /tmp/motd
     Welcome to the Pairhost Server.
 
     Private source code goes on an encrypted volume at ~/src
@@ -137,13 +155,6 @@ cat <<EOF /tmp/motd
 EOF
 
 sudo mv /tmp/motd /etc/
-
-
-# Bash aliases
-cat <<EOF >> ~pair/.bashrc
-alias nx="sudo /usr/NX/bin/nxserver --start"
-alias sourcecode="truecrypt -t -k '' --protect-hidden=no \$HOME/sourcecode.tc \$HOME/src"
-EOF
 
 
 # Automatic shutdown 15 minutes after midnight, system time
@@ -166,53 +177,62 @@ EOF
 
 
 # Truecrypt, http://www.truecrypt.org/
-if (uname -a | grep -q -E 'x86_64|ia64'); then
+if [ ! -e /usr/bin/truecrypt ]; then
+    if (uname -a | grep -q -E 'x86_64|ia64'); then
     # 64-bit
-    (
-        cd /tmp
-        wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x64.tar.gz
-        tar xzf truecrypt-7.0a-linux-console-x64.tar.gz
-        sudo ./truecrypt-7.0a-setup-console-x64
-    )
-else
+        (
+            cd /tmp
+            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x64.tar.gz
+            tar xzf truecrypt-7.0a-linux-console-x64.tar.gz
+            sudo ./truecrypt-7.0a-setup-console-x64
+        )
+    else
     # 32-bit
-    (
-        cd /tmp
-        wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x86.tar.gz
-        tar xzf truecrypt-7.0a-linux-console-x86.tar.gz
-        sudo ./truecrypt-7.0a-setup-console-x86
-    )
+        (
+            cd /tmp
+            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x86.tar.gz
+            tar xzf truecrypt-7.0a-linux-console-x86.tar.gz
+            sudo ./truecrypt-7.0a-setup-console-x86
+        )
+    fi
 fi
 
 # Create truecrypt volume
+### USER INTERACTION: accept defaults
 if [ ! -e /home/pair/sourcecode.tc ]; then
-    truecrypt -c sourcecode.tc --size=1073741824 \
+    sudo -i -u pair truecrypt -c sourcecode.tc --size=1073741824 \
         --volume-type=Normal --encryption=AES \
-        --hash=RIPEMD-160
+        --hash=RIPEMD-160 --filesystem="Linux Ext4" \
+        --random-source=/dev/urandom \
+        --protect-hidden=no -k \"\"
 fi
+
+# Dependencies for NX
+sudo apt-get install -y libaudiofile0
 
 # NX Free Edition for Linux, http://www.nomachine.com
-if (uname -a | grep -q -E 'x86_64|ia64'); then
+if [ ! -d /usr/NX ]; then
+    if (uname -a | grep -q -E 'x86_64|ia64'); then
     # 64-bit
-    (
-        cd /tmp
-        wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_x86_64.deb
-        wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_x86_64.deb
-        wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_x86_64.deb
-        sudo dpkg -i nxclient_3.4.0-7_x86_64.deb 
-        sudo dpkg -i nxnode_3.4.0-16_x86_64.deb 
-        sudo dpkg -i nxserver_3.4.0-17_x86_64.deb        
-    )
-else
+        (
+            cd /tmp
+            wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_x86_64.deb
+            wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_x86_64.deb
+            wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_x86_64.deb
+            sudo dpkg -i nxclient_3.4.0-7_x86_64.deb 
+            sudo dpkg -i nxnode_3.4.0-16_x86_64.deb 
+            sudo dpkg -i nxserver_3.4.0-17_x86_64.deb        
+        )
+    else
     # 32-bit
-    (
-        cd /tmp
-        wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_i386.deb
-        wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_i386.deb
-        wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_i386.deb
-        sudo dpkg -i nxclient_3.4.0-7_i386.deb 
-        sudo dpkg -i nxnode_3.4.0-16_i386.deb 
-        sudo dpkg -i nxserver_3.4.0-17_i386.deb
-    )
+        (
+            cd /tmp
+            wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_i386.deb
+            wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_i386.deb
+            wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_i386.deb
+            sudo dpkg -i nxclient_3.4.0-7_i386.deb 
+            sudo dpkg -i nxnode_3.4.0-16_i386.deb 
+            sudo dpkg -i nxserver_3.4.0-17_i386.deb
+        )
+    fi
 fi
-
