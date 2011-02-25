@@ -4,6 +4,14 @@
 # current directory must be the parent of the directory containing
 # this file.
 
+# 32-bit AMI: Alestic Ubuntu 10.10 Maverick, EBS boot
+AMI_32BIT="ami-ccf405a5"
+# 64-bit AMI: Alestic Ubuntu 10.10 Maverick, EBS boot
+AMI_64BIT="ami-cef405a7"  
+
+# Default region: U.S. East
+DEFAULT_REGION="us-east-1b"
+
 EC2_API_DIR=`ls -d ec2-api-tools-*`
 EC2_AMI_DIR=`ls -d ec2-ami-tools-*`
 export EC2_PRIVATE_KEY=`ls pk-*.pem`
