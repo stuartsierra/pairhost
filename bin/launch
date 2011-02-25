@@ -4,7 +4,7 @@ cd `dirname $0`/..
 source bin/env.sh
 
 function exit_with_usage {
-    echo <<EOF
+    cat <<EOF
 Usage: $0 <size>
 
 Where <size> is one of:
