@@ -1,69 +1,126 @@
 #!/bin/sh
 
+set -ev
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
 #### Ubuntu lucid bootstrap script
 
 # Add multiverse repositories (for EC2 tools)
-/usr/bin/sudo /usr/bin/perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
+sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
 
 # Add repository for Sun JDK
-/usr/bin/sudo /usr/bin/add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
 
 # Update packages
-/usr/bin/sudo /usr/bin/apt-get update
+sudo apt-get update
 
 # Java
-/usr/bin/sudo /usr/bin/apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
+sudo apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
 ### USER interaction: accept JDK license
 
 # Mail (to avoid installing exim later)
-/usr/bin/sudo /usr/bin/apt-get install -y postfix
+sudo apt-get install -y postfix
 ### USER interaction: Set mail host name
 
-# source control
-/usr/bin/sudo /usr/bin/apt-get install -y git-core git-svn subversion subversion-tools
+# curl
+sudo apt-get install curl
 
-# Necessary libs for RVM and Ruby
-/usr/bin/sudo /usr/bin/apt-get install -y build-essential bison openssl libreadline6 libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 libxml2-dev libxslt-dev autoconf libc6-dev
-# Ruby
-/usr/bin/sudo /usr/bin/apt-get install -y ruby-full jruby rake
-### USER TODO: Install latest Rubygems
-### USER TODO: Install "bundler" gem
-### USER TODO: Install RVM
+# source control
+sudo apt-get install -y git-core git-svn subversion subversion-tools
+
+# Misc development tools and native libraries
+sudo apt-get install -y build-essential \
+    autoconf \
+    bison \
+    libc6-dev \
+    libreadline6 \
+    libreadline6-dev \
+    libsqlite3-0 \
+    libsqlite3-dev \
+    libssl-dev \
+    libxml2 \
+    libxml2-dev \
+    libxslt \
+    libxslt-dev \
+    libyaml-dev \
+    openssl \
+    libssl-dev \
+    zlib1g \
+    zlib1g-dev
 
 # Databases
-/usr/bin/sudo /usr/bin/apt-get install -y mysql-server mysql-admin mysql-client postgresql postgresql-client libmysqlclient-dev
+sudo apt-get install -y sqlite3 \
+    mysql-server mysql-admin mysql-client libmysqlclient-dev \
+    postgresql postgresql-client sqlite3 
 ### USER interaction: set empty password for MySQL root user (twice)
 
 # Editors
-/usr/bin/sudo /usr/bin/apt-get install -y vim emacs nano
+sudo apt-get install -y vim emacs nano
 
 # Web Servers
-/usr/bin/sudo /usr/bin/apt-get install -y apache2
+sudo apt-get install -y apache2
 # These conflict with Apache: lighttpd nginx
 
-# C/C++ development:
-/usr/bin/sudo /usr/bin/apt-get install -y build-essential
-
 # C# development:
-/usr/bin/sudo /usr/bin/apt-get install -y mono-devel
+sudo apt-get install -y mono-devel
 
 # Desktop programs, including X, GNOME, Firefox, and OpenOffice
-/usr/bin/sudo /usr/bin/apt-get install -y ubuntu-desktop
+sudo apt-get install -y ubuntu-desktop
 
 # VNC server
-/usr/bin/sudo /usr/bin/apt-get install -y tightvncserver
+sudo apt-get install -y tightvncserver
 
 # Libraries
-/usr/bin/sudo /usr/bin/apt-get install -y libxml2 libxml2-dev libxslt libxslt-dev
+sudo apt-get install -y 
 
 # Misc
-/usr/bin/sudo /usr/bin/apt-get install -y cron python imagemagick zsh perl tmux doxygen
+sudo apt-get install -y cron python imagemagick zsh perl tmux doxygen
 
 # EC2 tools
-/usr/bin/sudo /usr/bin/apt-get install -y ec2-ami-tools ec2-api-tools
+sudo apt-get install -y ec2-ami-tools ec2-api-tools
+
+# Ruby
+sudo apt-get install -y ruby-full
+
+# Rubygems
+(
+    cd /tmp
+    wget http://production.cf.rubygems.org/rubygems/rubygems-1.5.2.tgz
+    tar xzf rubygems-1.5.2.tgz
+    cd rubygems-1.5.2
+    sudo ruby setup.rb
+)
+
+# Popular system-wide gems
+sudo gem install bundler rake thor rspec cucumber capistrano homesick
+
+### USER TODO: Install RVM
+
+
+# Login message
+cat <<EOF /tmp/motd
+    Welcome to the Pairhost Server.
+
+    Private source code goes on an encrypted volume at ~/src
+    To mount the encrypted source code volume, run the alias 'sourcecode'
+
+    Copies of open-source code can be stored under ~/open
+
+    Distribution files for various packages are in ~/distfiles
+
+    To start the NX server, run the alias 'nx'
+EOF
+
+
+cat <<EOF >> ~/.bashrc
+alias nx="sudo /usr/NX/bin/nxserver --start"
+alias sourcecode="truecrypt -t -k '' --protect-hidden=no /home/pair/sourcecode.tc /home/pair/src"
+EOF
+
 
 # Automatic shutdown 15 minutes after midnight, system time
-/bin/cat <<EOF > /tmp/auto_shutdown_warning_message
+cat <<EOF > /tmp/auto_shutdown_warning_message
 
     NOTICE!  This machine will shutdown automatically in 15 minutes.
 
@@ -71,13 +128,58 @@
 
 EOF
 
-/usr/bin/sudo /bin/mv /tmp/auto_shutdown_warning_message /etc/
+sudo mv /tmp/auto_shutdown_warning_message /etc/
 
-/usr/bin/sudo /usr/bin/crontab -u root - <<EOF
+sudo crontab -u root - <<EOF
 # min hr day mon week  command
-  0   1  *   *   *     /usr/bin/touch /var/auto_shutdown
-  1   1  *   *   *     /usr/bin/wall /etc/auto_shutdown_warning_message
- 16   1  *   *   *     /bin/sh -c 'if [ -e /var/auto_shutdown ]; then /sbin/shutdown -h 0; fi'
+  0   1  *   *   *     touch /var/auto_shutdown
+  1   1  *   *   *     wall /etc/auto_shutdown_warning_message
+ 16   1  *   *   *     sh -c 'if [ -e /var/auto_shutdown ]; then /sbin/shutdown -h 0; fi'
 EOF
 
-### USER TODO: Install truecrypt, http://www.truecrypt.org/
+
+# Truecrypt, http://www.truecrypt.org/
+if (uname -a | grep -q -E 'x86_64|ia64'); then
+    # 64-bit
+    (
+        cd /tmp
+        wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x64.tar.gz
+        tar xzf truecrypt-7.0a-linux-console-x64.tar.gz
+        sudo ./truecrypt-7.0a-setup-console-x64
+    )
+else
+    # 32-bit
+    (
+        cd /tmp
+        wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x86.tar.gz
+        tar xzf truecrypt-7.0a-linux-console-x86.tar.gz
+        sudo ./truecrypt-7.0a-setup-console-x86
+    )
+fi
+
+
+# NX Free Edition for Linux, http://www.nomachine.com
+if (uname -a | grep -q -E 'x86_64|ia64'); then
+    # 64-bit
+    (
+        cd /tmp
+        wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_x86_64.deb
+        wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_x86_64.deb
+        wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_x86_64.deb
+        sudo dpkg -i nxclient_3.4.0-7_x86_64.deb 
+        sudo dpkg -i nxnode_3.4.0-16_x86_64.deb 
+        sudo dpkg -i nxserver_3.4.0-17_x86_64.deb        
+    )
+else
+    # 32-bit
+    (
+        cd /tmp
+        wget http://64.34.161.181/download/3.4.0/Linux/nxclient_3.4.0-7_i386.deb
+        wget http://64.34.161.181/download/3.4.0/Linux/nxnode_3.4.0-16_i386.deb
+        wget http://64.34.161.181/download/3.4.0/Linux/FE/nxserver_3.4.0-17_i386.deb
+        sudo dpkg -i nxclient_3.4.0-7_i386.deb 
+        sudo dpkg -i nxnode_3.4.0-16_i386.deb 
+        sudo dpkg -i nxserver_3.4.0-17_i386.deb
+    )
+fi
+
