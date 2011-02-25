@@ -1,30 +1,50 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+#### Ubuntu maverick bootstrap script
 
 set -ev
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
-#### Ubuntu lucid bootstrap script
+# Create user accounts
+if ( id pair &> /dev/null ); then
+    echo "User 'pair' already exists."
+else
+    sudo useradd pair -G adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
+    sudo -u pair mkdir ~pair/src ~pair/open ~pair/distfiles
+fi
+
+if ( id nxuser &> /dev/null ); then
+    echo "User 'nxuser' already exists."
+else
+    sudo useradd nxuser
+fi
 
 # Add multiverse repositories (for EC2 tools)
 sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
 
 # Add repository for Sun JDK
-sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+sudo add-apt-repository "deb http://archive.canonical.com/ maverick partner"
 
 # Update packages
 sudo apt-get update
 
 # Java
+### USER INTERACTION: accept JDK license
 sudo apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
-### USER interaction: accept JDK license
 
 # Mail (to avoid installing exim later)
+### USER INTERACTION: Select mail server type (no configuration)
 sudo apt-get install -y postfix
-### USER interaction: Set mail host name
+
+# Databases
+### USER INTERACTION: set empty password for MySQL root user (twice)
+sudo apt-get install -y sqlite3 \
+    mysql-server mysql-admin mysql-client libmysqlclient-dev \
+    postgresql postgresql-client sqlite3 
 
 # curl
-sudo apt-get install curl
+sudo apt-get install -y curl
 
 # source control
 sudo apt-get install -y git-core git-svn subversion subversion-tools
@@ -39,21 +59,12 @@ sudo apt-get install -y build-essential \
     libsqlite3-0 \
     libsqlite3-dev \
     libssl-dev \
-    libxml2 \
     libxml2-dev \
-    libxslt \
-    libxslt-dev \
+    libxslt1-dev \
     libyaml-dev \
     openssl \
     libssl-dev \
-    zlib1g \
     zlib1g-dev
-
-# Databases
-sudo apt-get install -y sqlite3 \
-    mysql-server mysql-admin mysql-client libmysqlclient-dev \
-    postgresql postgresql-client sqlite3 
-### USER interaction: set empty password for MySQL root user (twice)
 
 # Editors
 sudo apt-get install -y vim emacs nano
@@ -84,19 +95,30 @@ sudo apt-get install -y ec2-ami-tools ec2-api-tools
 sudo apt-get install -y ruby-full
 
 # Rubygems
-(
-    cd /tmp
-    wget http://production.cf.rubygems.org/rubygems/rubygems-1.5.2.tgz
-    tar xzf rubygems-1.5.2.tgz
-    cd rubygems-1.5.2
-    sudo ruby setup.rb
-)
+if [ ! -e /usr/bin/gem ]; then
+    (
+        cd /tmp
+        wget http://production.cf.rubygems.org/rubygems/rubygems-1.5.2.tgz
+        tar xzf rubygems-1.5.2.tgz
+        cd rubygems-1.5.2
+        sudo ruby setup.rb
+        cd /usr/bin
+        sudo ln -s gem1.8 gem
+    )
+fi
 
 # Popular system-wide gems
-sudo gem install bundler rake thor rspec cucumber capistrano homesick
+sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
 
-### USER TODO: Install RVM
-
+# RVM
+if [ ! -e ~pair/.rvm ]; then
+    (
+        cd /tmp
+        wget http://rvm.beginrescueend.com/releases/rvm-install-head
+        sudo -i -u pair bash rvm-install-head
+        echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"' >> ~pair/.bashrc
+    )
+fi
 
 # Login message
 cat <<EOF /tmp/motd
@@ -110,12 +132,17 @@ cat <<EOF /tmp/motd
     Distribution files for various packages are in ~/distfiles
 
     To start the NX server, run the alias 'nx'
+
+    To shut down this instance without destroying it, run 'sudo shutdown -h 0'
 EOF
 
+sudo mv /tmp/motd /etc/
 
-cat <<EOF >> ~/.bashrc
+
+# Bash aliases
+cat <<EOF >> ~pair/.bashrc
 alias nx="sudo /usr/NX/bin/nxserver --start"
-alias sourcecode="truecrypt -t -k '' --protect-hidden=no /home/pair/sourcecode.tc /home/pair/src"
+alias sourcecode="truecrypt -t -k '' --protect-hidden=no \$HOME/sourcecode.tc \$HOME/src"
 EOF
 
 
@@ -157,6 +184,12 @@ else
     )
 fi
 
+# Create truecrypt volume
+if [ ! -e /home/pair/sourcecode.tc ]; then
+    truecrypt -c sourcecode.tc --size=1073741824 \
+        --volume-type=Normal --encryption=AES \
+        --hash=RIPEMD-160
+fi
 
 # NX Free Edition for Linux, http://www.nomachine.com
 if (uname -a | grep -q -E 'x86_64|ia64'); then
