@@ -18,7 +18,7 @@ EOF
 
 if [ -z "$1" ]; then
     exit_with_usage
-}
+fi
 
 INSTANCE_TYPE="$1"
 
