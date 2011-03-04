@@ -7,25 +7,31 @@ set -ev
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 # Create user accounts
-if ( id pair &> /dev/null ); then
-    echo "User 'pair' already exists."
-else
-    sudo useradd pair -m -s /bin/bash \
-        -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
-    sudo -u pair mkdir ~pair/src ~pair/open ~pair/distfiles
-    sudo -i -u pair ssh-keygen -q
+( id pair &> /dev/null ) ||
+sudo useradd pair -m -s /bin/bash \
+    -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
+
+if [ ! -e ~pair/src ]; then
+    sudo -u pair mkdir ~pair/src
 fi
 
-if ( id nxuser &> /dev/null ); then
-    echo "User 'nxuser' already exists."
-else
-    sudo useradd nxuser -m -s /bin/bash
+if [ ! -e ~pair/open ]; then
+    sudo -u pair mkdir ~pair/open
+fi
+
+if [ ! -e ~pair/distfiles ]; then
+    sudo -u pair mkdir ~pair/distfiles
+fi
+
+if [ ! -e ~pair/.ssh/id_rsa ]; then
+    sudo -i -u pair ssh-keygen -f ~pair/.ssh/id_rsa -t rsa -P "" -C "pair@pairhost"
 fi
 
 # Add multiverse repositories (for EC2 tools)
 sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
 
 # Add repository for Sun JDK
+( grep -q partner /etc/apt/sources.list ) ||
 sudo add-apt-repository "deb http://archive.canonical.com/ maverick partner"
 
 # Update packages
@@ -45,9 +51,6 @@ sudo apt-get install -y sqlite3 \
     mysql-server mysql-admin mysql-client libmysqlclient-dev \
     postgresql postgresql-client sqlite3 
 
-# curl
-sudo apt-get install -y curl
-
 # source control
 sudo apt-get install -y git-core git-svn subversion subversion-tools
 
@@ -55,6 +58,7 @@ sudo apt-get install -y git-core git-svn subversion subversion-tools
 sudo apt-get install -y build-essential \
     autoconf \
     bison \
+    curl \
     libc6-dev \
     libreadline6 \
     libreadline6-dev \
@@ -84,9 +88,6 @@ sudo apt-get install -y ubuntu-desktop
 # VNC server
 sudo apt-get install -y tightvncserver
 
-# Libraries
-sudo apt-get install -y 
-
 # Misc
 sudo apt-get install -y cron python imagemagick zsh perl tmux doxygen
 
@@ -110,11 +111,8 @@ if [ ! -e /usr/bin/gem ]; then
 fi
 
 # Popular system-wide gems
-if ( gem list --local | grep -q bundler ); then
-    echo "Gems already installed"
-else
-    sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
-fi
+( gem list --local | grep -q bundler ) ||
+sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
 
 # RVM
 if [ ! -e ~pair/.rvm ]; then
@@ -126,17 +124,13 @@ if [ ! -e ~pair/.rvm ]; then
 fi
 
 # Bash aliases
-if ( grep truecrypt -s ~pair/.bashrc ); then
-    echo "Shell aliases already installed"
-else
-    cat <<EOF >> /tmp/new_bash_aliases
+( grep truecrypt -s ~pair/.bashrc ) ||
+cat <<EOF >> /tmp/new_bash_aliases
 [[ -s "\$HOME/.rvm/scripts/rvm" ]] && . "\$HOME/.rvm/scripts/rvm"
 alias nx="sudo /usr/NX/bin/nxserver --start"
 alias sourcecode="truecrypt -t -k '' --protect-hidden=no \$HOME/sourcecode.tc \$HOME/src"
 EOF
-    sudo sh -c 'cat /tmp/new_bash_aliases >> ~pair/.bashrc'
-fi
-
+sudo sh -c 'cat /tmp/new_bash_aliases >> ~pair/.bashrc'
 
 # Login message
 cat <<EOF > /tmp/motd
@@ -198,13 +192,13 @@ if [ ! -e /usr/bin/truecrypt ]; then
 fi
 
 # Create truecrypt volume
-### USER INTERACTION: accept defaults
+### USER INTERACTION: Enter a password
 if [ ! -e /home/pair/sourcecode.tc ]; then
     sudo -i -u pair truecrypt -c sourcecode.tc --size=1073741824 \
         --volume-type=Normal --encryption=AES \
         --hash=RIPEMD-160 --filesystem="Linux Ext4" \
         --random-source=/dev/urandom \
-        --protect-hidden=no -k \"\"
+        --protect-hidden=no -k ""
 fi
 
 # Dependencies for NX
