@@ -91,4 +91,9 @@ NX: Faster X-Windows in the Cloud
 Bootstrapping New Instances
 ===========================
 
-Not automated or documented yet.  Sorry.
+1. Launch a new instance: `bin/launch m1.small`
+
+When it's ready, the new instance hostname, like `ec2-123-123-123-123.compute-1.amazonaws.com` will be printed.
+
+2. Bootstrap the instance: `bin/bootstrap <hostname>`
+
