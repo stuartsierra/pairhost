@@ -5,17 +5,17 @@ source bin/env.sh
 
 function exit_with_usage {
     cat <<EOF
-Usage: $0 <username> <hostname>
+Usage: $0 <hostname>
 EOF
     exit 1
 }
 
-if [ -z "$2" ]; then
+if [ -z "$1" ]; then
     exit_with_usage
 fi
 
-USERNAME=$1
-HOSTNAME=$2
+USERNAME=ubuntu
+HOSTNAME=$1
 
-scp config/bootstrap-remote.sh $USERNAME@$HOSTNAME:/tmp
-ssh -t $USERNAME@$HOSTNAME /usr/bin/env bash /tmp/bootstrap-remote.sh
+scp -i $ID_RSA_PRIVATE_KEY config/bootstrap-remote.sh $USERNAME@$HOSTNAME:/tmp
+ssh -i $ID_RSA_PRIVATE_KEY -t $USERNAME@$HOSTNAME /usr/bin/env bash /tmp/bootstrap-remote.sh
