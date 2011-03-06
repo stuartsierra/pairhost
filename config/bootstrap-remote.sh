@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#### Ubuntu maverick bootstrap script
+#### Ubuntu lucid bootstrap script
 
 set -ev
 
@@ -11,35 +11,22 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 sudo useradd pair -m -s /bin/bash \
     -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
 
-if [ ! -e ~pair/src ]; then
-    sudo -u pair mkdir ~pair/src
-fi
-
-if [ ! -e ~pair/open ]; then
-    sudo -u pair mkdir ~pair/open
-fi
-
-if [ ! -e ~pair/distfiles ]; then
-    sudo -u pair mkdir ~pair/distfiles
-fi
-
 if [ ! -e ~pair/.ssh/id_rsa ]; then
-    sudo -i -u pair ssh-keygen -f ~pair/.ssh/id_rsa -t rsa -P "" -C "pair@pairhost"
+    sudo -i -u pair ssh-keygen -f ~pair/.ssh/id_rsa -t rsa -C "pair@pairhost" -P \"\"
 fi
 
 # Add multiverse repositories (for EC2 tools)
 sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
 
 # Add repository for Sun JDK
-( grep -q partner /etc/apt/sources.list ) ||
-sudo add-apt-repository "deb http://archive.canonical.com/ maverick partner"
+sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
 
 # Update packages
 sudo apt-get update
 
 # Java
 ### USER INTERACTION: accept JDK license
-sudo apt-get install -y sun-java6-jdk ant maven2 maven-ant-helper libmaven2-core-java
+sudo apt-get install -y sun-java6-jdk
 
 # Mail (to avoid installing exim later)
 ### USER INTERACTION: Select mail server type (no configuration)
@@ -51,26 +38,67 @@ sudo apt-get install -y sqlite3 \
     mysql-server mysql-admin mysql-client libmysqlclient-dev \
     postgresql postgresql-client sqlite3 
 
+# Truecrypt, http://www.truecrypt.org/
+### USER INTERACTION: accept defaults for Truecrypt installation
+if [ ! -e /usr/bin/truecrypt ]; then
+    if (uname -a | grep -q -E 'x86_64|ia64'); then
+    # 64-bit
+        (
+            cd /tmp
+            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x64.tar.gz
+            tar xzf truecrypt-7.0a-linux-console-x64.tar.gz
+            sudo ./truecrypt-7.0a-setup-console-x64
+        )
+    else
+    # 32-bit
+        (
+            cd /tmp
+            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x86.tar.gz
+            tar xzf truecrypt-7.0a-linux-console-x86.tar.gz
+            sudo ./truecrypt-7.0a-setup-console-x86
+        )
+    fi
+fi
+
+
+### NO MORE USER INTERACTION REQUIRED AFTER THIS POINT
+
+# "fuse" module for Truecrypt
+sudo modprobe fuse
+sudo sh -c 'echo fuse >> /etc/modules'
+
+# Java utilities
+sudo apt-get install -y ant maven2 maven-ant-helper libmaven2-core-java
+
 # source control
 sudo apt-get install -y git-core git-svn subversion subversion-tools
 
 # Misc development tools and native libraries
-sudo apt-get install -y build-essential \
+sudo apt-get install -y \
     autoconf \
     bison \
+    build-essential \
+    cron \
     curl \
+    doxygen \
+    imagemagick \
     libc6-dev \
     libreadline6 \
     libreadline6-dev \
     libsqlite3-0 \
     libsqlite3-dev \
     libssl-dev \
+    libssl-dev \
     libxml2-dev \
     libxslt1-dev \
     libyaml-dev \
+    mono-devel \
     openssl \
-    libssl-dev \
+    perl \
+    python \
+    tmux \
     zlib1g-dev
+    zsh \
 
 # Editors
 sudo apt-get install -y vim emacs nano
@@ -79,17 +107,11 @@ sudo apt-get install -y vim emacs nano
 sudo apt-get install -y apache2
 # These conflict with Apache: lighttpd nginx
 
-# C# development:
-sudo apt-get install -y mono-devel
-
 # Desktop programs, including X, GNOME, Firefox, and OpenOffice
 sudo apt-get install -y ubuntu-desktop
 
 # VNC server
 sudo apt-get install -y tightvncserver
-
-# Misc
-sudo apt-get install -y cron python imagemagick zsh perl tmux doxygen
 
 # EC2 tools
 sudo apt-get install -y ec2-ami-tools ec2-api-tools
@@ -112,7 +134,9 @@ fi
 
 # Popular system-wide gems
 ( gem list --local | grep -q bundler ) ||
-sudo gem install --no-rdoc --no-ri bundler rake thor rspec cucumber capistrano homesick
+sudo gem install --no-rdoc --no-ri \
+    bundler rake rails \
+    thor rspec cucumber capistrano homesick
 
 # RVM
 if [ ! -e ~pair/.rvm ]; then
@@ -123,38 +147,44 @@ if [ ! -e ~pair/.rvm ]; then
     )
 fi
 
-# Bash aliases
-( grep truecrypt -s ~pair/.bashrc ) ||
-cat <<EOF >> /tmp/new_bash_aliases
-[[ -s "\$HOME/.rvm/scripts/rvm" ]] && . "\$HOME/.rvm/scripts/rvm"
+# .bashrc for the "pair" user
+cat <<'EOF' > /tmp/new_bashrc
+
+# Local executables
+PATH=$PATH:~/bin
+
+# Pairhost aliases
 alias nx="sudo /usr/NX/bin/nxserver --start"
-alias sourcecode="truecrypt -t -k '' --protect-hidden=no \$HOME/sourcecode.tc \$HOME/src"
+
+# Ruby Version Manager (RVM)
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 EOF
-sudo sh -c 'cat /tmp/new_bash_aliases >> ~pair/.bashrc'
+
+( grep nxserver -s ~pair/.bashrc ) ||
+sudo sh -c 'cat /tmp/new_bashrc >> ~pair/.bashrc'
 
 # Login message
-cat <<EOF > /tmp/motd
+cat <<'EOF' > /tmp/motd
+
     Welcome to the Pairhost Server.
 
-    Private source code goes on an encrypted volume at ~/src
-    To mount the encrypted source code volume, run the alias 'sourcecode'
-
-    Copies of open-source code can be stored under ~/open
-
-    Distribution files for various packages are in ~/distfiles
-
     To start the NX server, run the alias 'nx'
+    To use NX, you will need to set a password with 'sudo passwd <username>'
 
-    To shut down this instance without destroying it, run 'sudo shutdown -h 0'
+    To shut down this instance without destroying it, run 'sudo halt'
+
+    This machine will shutdown automatically at 1:16am UTC;
+    to prevent this, delete the file /var/auto_shutdown
+
 EOF
 
 sudo mv /tmp/motd /etc/
 
 
-# Automatic shutdown 15 minutes after midnight, system time
-cat <<EOF > /tmp/auto_shutdown_warning_message
+# Automatic shutdown at 1:16am, system time (UTC)
+cat <<'EOF' > /tmp/auto_shutdown_warning_message
 
-    NOTICE!  This machine will shutdown automatically in 15 minutes.
+    NOTICE!  This machine will shut down automatically in 15 minutes.
 
     To prevent this, delete the file /var/auto_shutdown
 
@@ -162,44 +192,25 @@ EOF
 
 sudo mv /tmp/auto_shutdown_warning_message /etc/
 
-sudo crontab -u root - <<EOF
-# min hr day mon week  command
-  0   1  *   *   *     touch /var/auto_shutdown
-  1   1  *   *   *     wall /etc/auto_shutdown_warning_message
- 16   1  *   *   *     sh -c 'if [ -e /var/auto_shutdown ]; then /sbin/shutdown -h 0; fi'
+cat <<'EOF' > /tmp/auto_shutdown
+If this file exists as /var/auto_shutdown then this machine will
+shut down automatically at 1:16am system time (UTC).
+
+To prevent automatic shutdown, rename or delete this file.
+EOF
+sudo mv /tmp/auto_shutdown /var/auto_shutdown
+
+cat <<'EOF' > /tmp/auto_shutdown_crontab
+
+# Auto-shutdown
+# min hr day mon weekday user  command
+  1   1  *   *   *       root  /bin/sh -c 'if [ -e /var/auto_shutdown ]; then /usr/bin/wall /etc/auto_shutdown_warning_message; fi'
+ 16   1  *   *   *       root  /bin/sh -c 'if [ -e /var/auto_shutdown ]; then /sbin/shutdown -h 0; fi'
+
 EOF
 
+sudo mv /tmp/auto_shutdown_crontab /etc/cron.d/auto_shutdown
 
-# Truecrypt, http://www.truecrypt.org/
-if [ ! -e /usr/bin/truecrypt ]; then
-    if (uname -a | grep -q -E 'x86_64|ia64'); then
-    # 64-bit
-        (
-            cd /tmp
-            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x64.tar.gz
-            tar xzf truecrypt-7.0a-linux-console-x64.tar.gz
-            sudo ./truecrypt-7.0a-setup-console-x64
-        )
-    else
-    # 32-bit
-        (
-            cd /tmp
-            wget http://www.truecrypt.org/download/truecrypt-7.0a-linux-console-x86.tar.gz
-            tar xzf truecrypt-7.0a-linux-console-x86.tar.gz
-            sudo ./truecrypt-7.0a-setup-console-x86
-        )
-    fi
-fi
-
-# Create truecrypt volume
-### USER INTERACTION: Enter a password
-if [ ! -e /home/pair/sourcecode.tc ]; then
-    sudo -i -u pair truecrypt -c sourcecode.tc --size=1073741824 \
-        --volume-type=Normal --encryption=AES \
-        --hash=RIPEMD-160 --filesystem="Linux Ext4" \
-        --random-source=/dev/urandom \
-        --protect-hidden=no -k ""
-fi
 
 # Dependencies for NX
 sudo apt-get install -y libaudiofile0
@@ -230,3 +241,23 @@ if [ ! -d /usr/NX ]; then
         )
     fi
 fi
+
+# Enable password-based SSH logins for NX
+sudo perl -p -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/go' /etc/ssh/sshd_config
+sudo /etc/init.d/ssh restart
+
+
+# Enable password-less `sudo` for the users in the "sudo" group:
+cat <<'EOF' > /tmp/new_sudoers
+
+# Enable password-less sudo for all users in the "sudo" group
+%sudo ALL=NOPASSWD: ALL
+
+EOF
+sudo sh -c 'cat /tmp/new_sudoers >> /etc/sudoers'
+
+
+# Install a base set of Maven packages by downloading Jetty
+mvn org.apache.maven.plugins:maven-dependency-plugin:2.2:get \
+    -DrepoUrl=http://repo1.maven.org/maven2/ \
+    -Dartifact=jetty:jetty:5.1.10
