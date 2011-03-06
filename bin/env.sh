@@ -4,10 +4,10 @@
 # current directory must be the parent of the directory containing
 # this file.
 
-# 32-bit AMI: Alestic Ubuntu 10.10 Maverick, EBS boot
-AMI_32BIT="ami-ccf405a5"
-# 64-bit AMI: Alestic Ubuntu 10.10 Maverick, EBS boot
-AMI_64BIT="ami-cef405a7"  
+# 32-bit AMI: Alestic Ubuntu 10.04 Lucid, EBS boot
+AMI_32BIT="ami-3e02f257"
+# 64-bit AMI: Alestic Ubuntu 10.04 Lucid, EBS boot
+AMI_64BIT="ami-3202f25b"  
 
 # Default region: U.S. East
 DEFAULT_REGION="us-east-1b"
