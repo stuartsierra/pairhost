@@ -88,8 +88,8 @@ NX: Faster X-Windows in the Cloud
 
 
 
-Bootstrapping New Instances
-===========================
+Bootstrapping New Instances from Scratch
+========================================
 
 1. Launch a new instance: `bin/launch m1.small`
 
@@ -97,3 +97,6 @@ When it's ready, the new instance hostname, like `ec2-123-123-123-123.compute-1.
 
 2. Bootstrap the instance: `bin/bootstrap <hostname>`
 
+Answer the prompts and questions as they appear.
+
+3. Perform additional setup/configuration as needed
