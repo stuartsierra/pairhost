@@ -11,9 +11,9 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 sudo useradd pair -m -s /bin/bash \
     -G sudo,adm,dialout,cdrom,floppy,audio,dip,video,plugdev,admin
 
-if [ ! -e ~pair/.ssh/id_rsa ]; then
-    sudo -i -u pair ssh-keygen -f ~pair/.ssh/id_rsa -t rsa -C "pair@pairhost" -P \"\"
-fi
+( ls /home/pair/.ssh/id_rsa &> /dev/null ) &&
+sudo -i -u pair ssh-keygen -f /home/pair/.ssh/id_rsa -t rsa -C "pair@pairhost" -P \"\"
+
 
 # Add multiverse repositories (for EC2 tools)
 sudo perl -p -i -e 's/universe/universe multiverse/go' /etc/apt/sources.list
@@ -40,7 +40,7 @@ sudo apt-get install -y sqlite3 \
 
 # Truecrypt, http://www.truecrypt.org/
 ### USER INTERACTION: accept defaults for Truecrypt installation
-if [ ! -e /usr/bin/truecrypt ]; then
+if ! [ -e /usr/bin/truecrypt ]; then
     if (uname -a | grep -q -E 'x86_64|ia64'); then
     # 64-bit
         (
@@ -97,8 +97,8 @@ sudo apt-get install -y \
     perl \
     python \
     tmux \
-    zlib1g-dev
-    zsh \
+    zlib1g-dev \
+    zsh
 
 # Editors
 sudo apt-get install -y vim emacs nano
@@ -120,7 +120,7 @@ sudo apt-get install -y ec2-ami-tools ec2-api-tools
 sudo apt-get install -y ruby-full
 
 # Rubygems
-if [ ! -e /usr/bin/gem ]; then
+if ! [ -e /usr/bin/gem ]; then
     (
         cd /tmp
         wget http://production.cf.rubygems.org/rubygems/rubygems-1.5.2.tgz
@@ -139,7 +139,7 @@ sudo gem install --no-rdoc --no-ri \
     thor rspec cucumber capistrano homesick
 
 # RVM
-if [ ! -e ~pair/.rvm ]; then
+if ! [ -e ~pair/.rvm ]; then
     (
         cd /tmp
         wget http://rvm.beginrescueend.com/releases/rvm-install-head
@@ -216,7 +216,7 @@ sudo mv /tmp/auto_shutdown_crontab /etc/cron.d/auto_shutdown
 sudo apt-get install -y libaudiofile0
 
 # NX Free Edition for Linux, http://www.nomachine.com
-if [ ! -d /usr/NX ]; then
+if ! [ -d /usr/NX ]; then
     if (uname -a | grep -q -E 'x86_64|ia64'); then
     # 64-bit
         (
@@ -261,3 +261,15 @@ sudo sh -c 'cat /tmp/new_sudoers >> /etc/sudoers'
 mvn org.apache.maven.plugins:maven-dependency-plugin:2.2:get \
     -DrepoUrl=http://repo1.maven.org/maven2/ \
     -Dartifact=jetty:jetty:5.1.10
+
+
+# Leiningen
+(
+    cd /tmp
+    wget --no-check-certificate https://github.com/technomancy/leiningen/raw/stable/bin/lein
+    sudo mkdir -p /home/pair/bin
+    sudo cp /tmp/lein /home/pair/bin/lein
+    sudo chmod 0755 /home/pair/bin/lein
+    sudo chown -R pair:pair /home/pair/bin
+    sudo -i -u pair lein
+)
