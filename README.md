@@ -2,6 +2,9 @@ Pairhost: the ultimate EC2 remote pairing development workstation
 
 by Stuart Sierra, http://stuartsierra.com/
 
+** Not under active development **
+
+See [devbox](https://github.com/stuartsierra/devbox) for more recent work
 
 Setup
 =====
